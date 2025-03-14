@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_ml_text_recognition/data/cubits/image_picker/image_picker_cubit.dart';
+import 'package:google_ml_text_recognition/data/cubits/image_processor/image_processor_cubit.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,14 +28,13 @@ class _HomePageState extends State<HomePage> {
       body: SizedBox(
         height: double.infinity,
         width: double.infinity,
-        child: BlocBuilder<ImagePickerCubit, ImagePickerState>(
+        child: BlocBuilder<ImageProcessorCubit, ImageProcessorState>(
           builder: (context, state) {
             return Stack(
               children: <Widget>[
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: ListView(
                     children: [
                       Container(
                         height: 350,
@@ -46,25 +45,37 @@ class _HomePageState extends State<HomePage> {
                                 File(state.imagePath),
                                 fit: BoxFit.cover,
                               )
-                            : const Icon(
-                                Icons.broken_image,
-                                size: 150.0,
-                                color: Colors.white,
-                              ),
+                            : state is ImageProcessed
+                                ? Image.file(
+                                    File(state.imagePath),
+                                    fit: BoxFit.cover,
+                                  )
+                                : const Icon(
+                                    Icons.broken_image,
+                                    size: 150.0,
+                                    color: Colors.white,
+                                  ),
                       ),
                       SizedBox(
                         height: 32.0,
                       ),
-                      if (state is IsPickingImage)
+                      if (state is IsLoading)
                         Center(
-                          child: CircularProgressIndicator(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: CircularProgressIndicator(),
+                          ),
                         ),
                       Text(
-                        state is ImagePicked
-                            ? 'Image picked'
-                            : state is ErrorPickingImage
+                        state is ImageProcessed
+                            ? state.extractedText.isEmpty
+                                ? 'No text found'
+                                : state.extractedText
+                            : state is ImageProcessorError
                                 ? 'No image picked'
-                                : 'Pick an image to extract text',
+                                : state is ImageProcessorInitial
+                                    ? 'Pick an image to extract text'
+                                    : "Loading...",
                         style: TextStyle(
                           fontSize: 16.0,
                           fontWeight: FontWeight.w600,
@@ -85,7 +96,7 @@ class _HomePageState extends State<HomePage> {
                       IconButton.outlined(
                         onPressed: () {
                           context
-                              .read<ImagePickerCubit>()
+                              .read<ImageProcessorCubit>()
                               .pickImageFromCamera();
                         },
                         icon: Icon(Icons.camera_alt),
@@ -98,7 +109,7 @@ class _HomePageState extends State<HomePage> {
                       IconButton.outlined(
                         onPressed: () {
                           context
-                              .read<ImagePickerCubit>()
+                              .read<ImageProcessorCubit>()
                               .pickImageFromGallery();
                         },
                         icon: Icon(Icons.image),

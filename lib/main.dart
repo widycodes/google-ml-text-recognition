@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_ml_text_recognition/data/cubits/image_processor/image_processor_cubit.dart';
 import 'package:google_ml_text_recognition/data/services/image_picker_service.dart';
+import 'package:google_ml_text_recognition/data/services/text_recognition_service.dart';
 import 'package:google_ml_text_recognition/presentation/screens/home_page.dart';
-import 'package:google_ml_text_recognition/data/cubits/image_picker/image_picker_cubit.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,8 +21,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: BlocProvider(
-        create: (context) => ImagePickerCubit(
+        create: (context) => ImageProcessorCubit(
           imagePickerService: ImagePickerService(),
+          textRecognitionService: TextRecognitionService(),
         ),
         child: const HomePage(),
       ),
